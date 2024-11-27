@@ -1,0 +1,176 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: uimicroservice
+  labels:
+    app: microuimicrotask
+  namespace: default
+spec:
+  replicas: 5
+  selector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - microuimicrotask
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25% 
+  template:
+    metadata:
+      labels:
+        app: microuimicrotask
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname  # This is the node label key
+                    operator: In
+                    values:
+                      - aks-agentpool-32203132-vmss000000   # Replace with the actual node name
+                      - aks-pawan-32203132-vmss000000 
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - microuimicrotask
+                topologyKey: "kubernetes.io/hostname"
+                      # Replace with the actual node name
+      tolerations:
+        - key: app
+          operator: "Equal"
+          value: microuimicrotask
+          effect: "NoSchedule"
+      containers:
+        - name: uimicroservice
+          image: nginx
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+          livenessProbe:
+            httpGet:
+              path: /healthz  # Use a health check endpoint of your app (change as needed)
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /readiness  # Use a readiness check endpoint of your app (change as needed)
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+
+
+
+          # env:
+          # - name: ENVIRONMENT
+          #   value: "production"
+          # - name: LOG_LEVEL
+          #   value: "info"
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: uimicroservice
+#   labels:
+#     app: microuimicrotask
+#   namespace: default
+# spec:
+#   replicas: 5
+#   selector:
+#     matchLabels:
+#       app: microuimicrotask
+#   strategy:
+#     type: RollingUpdate
+#     rollingUpdate:
+#       maxSurge: 25%
+#       maxUnavailable: 25%
+#   template:
+#     metadata:
+#       labels:
+#         app: microuimicrotask
+#       annotations:
+#         prometheus.io/scrape: "true"
+#         prometheus.io/port: "80"
+#     spec:
+#       serviceAccountName: uimicroservice-sa
+#       priorityClassName: high-priority
+#       dnsConfig:
+#         nameservers:
+#           - 8.8.8.8
+#           - 8.8.4.4
+#       affinity:
+#         nodeAffinity:
+#           requiredDuringSchedulingIgnoredDuringExecution:
+#             nodeSelectorTerms:
+#               - matchExpressions:
+#                   - key: kubernetes.io/hostname
+#                     operator: In
+#                     values:
+#                       - aks-agentpool-34244086-vmss000000
+#                       - aks-userpool-23695494-vmss000000
+#         podAntiAffinity:
+#           requiredDuringSchedulingIgnoredDuringExecution:
+#             - labelSelector:
+#                 matchExpressions:
+#                   - key: app
+#                     operator: In
+#                     values:
+#                       - microuimicrotask
+#               topologyKey: "kubernetes.io/hostname"
+#       containers:
+#         - name: uimicroservice
+#           image: nginx
+#           ports:
+#             - containerPort: 80
+#           resources:
+#             requests:
+#               memory: "512Mi"
+#               cpu: "500m"
+#             limits:
+#               memory: "1Gi"
+#               cpu: "1000m"
+#           livenessProbe:
+#             httpGet:
+#               path: /healthz
+#               port: 80
+#             initialDelaySeconds: 5
+#             periodSeconds: 10
+#           readinessProbe:
+#             httpGet:
+#               path: /readiness
+#               port: 80
+#             initialDelaySeconds: 5
+#             periodSeconds: 10
+#           env:
+#             - name: ENVIRONMENT
+#               value: "production"
+#             - name: LOG_LEVEL
+#               value: "info"
+
+
+
+
+                       
+
+
+
+
