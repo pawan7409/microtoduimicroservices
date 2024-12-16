@@ -1,83 +1,46 @@
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: uimicroservice
-  labels:
-    app: microuimicrotask
-  namespace: default
-spec:
-  replicas: 5
-  selector:
-    matchExpressions:
-      - key: app
-        operator: In
-        values:
-          - microuimicrotask
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 25% 
-  template:
-    metadata:
-      labels:
-        app: microuimicrotask
-    spec:
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                  - key: kubernetes.io/hostname  # This is the node label key
-                    operator: In
-                    values:
-                      - aks-agentpool-32203132-vmss000000   # Replace with the actual node name
-                      - aks-pawan-32203132-vmss000000 
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              podAffinityTerm:
-                labelSelector:
-                  matchExpressions:
-                    - key: app
-                      operator: In
-                      values:
-                        - microuimicrotask
-                topologyKey: "kubernetes.io/hostname"
-                      # Replace with the actual node name
-      tolerations:
-        - key: app
-          operator: "Equal"
-          value: microuimicrotask
-          effect: "NoSchedule"
-      containers:
-        - name: uimicroservice
-          image: nginx
-          ports:
-            - containerPort: 80
-          resources:
-            requests:
-              memory: "512Mi"
-              cpu: "500m"
-            limits:
-              memory: "1Gi"
-              cpu: "1000m"
-          livenessProbe:
-            httpGet:
-              path: /healthz  # Use a health check endpoint of your app (change as needed)
-              port: 80
-            initialDelaySeconds: 5
-            periodSeconds: 10
-            timeoutSeconds: 2
-            failureThreshold: 3
-          readinessProbe:
-            httpGet:
-              path: /readiness  # Use a readiness check endpoint of your app (change as needed)
-              port: 80
-            initialDelaySeconds: 5
-            periodSeconds: 10
-            timeoutSeconds: 2
-            failureThreshold: 3
+name: Deploy to Kubernetes
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to Kubernetes
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository to access the YAML file
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Set up kubectl
+      - name: Set up Kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      # Authenticate to the Kubernetes cluster
+      - name: Authenticate to Kubernetes
+        env:
+          KUBECONFIG: ${{ secrets.KUBECONFIG }}
+        run: |
+          echo "${KUBECONFIG}" > kubeconfig
+          export KUBECONFIG=$(pwd)/kubeconfig
+
+      # Deploy the YAML file
+      - name: Apply Kubernetes manifests
+        run: kubectl apply -f deployment.yaml
+
+      # Verify deployment
+      - name: Verify Deployment Status
+        run: kubectl rollout status deployment/uimicroservice
+
 
 
 
