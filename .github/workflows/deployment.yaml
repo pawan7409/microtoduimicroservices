@@ -23,10 +23,10 @@ jobs:
         with:
           node-version: '16'
 
-      # Update the backend URL in the src/TodoApp.js file
-      - name: Update backend URL
-        run: |
-          sed -i 's|http://localhost:5000|https://new-backend-url.com|g' src/TodoApp.js
+      # # Update the backend URL in the src/TodoApp.js file
+      # - name: Update backend URL
+      #   run: |
+      #     sed -i 's|http://localhost:5000|https://new-backend-url.com|g' src/TodoApp.js
 
       # Install dependencies
       - name: Install dependencies
