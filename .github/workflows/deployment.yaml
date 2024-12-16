@@ -2,8 +2,7 @@ name: Deploy Microservice Application
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main , features/pawangupta ]
   workflow_dispatch:
 
 permissions:
@@ -64,6 +63,17 @@ jobs:
         run: |
           # Example: SSH into your server and deploy the image
           ssh user@your-server "docker pull your-docker-image-name && docker-compose up -d"
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Deploy via SSH
+        run: |
+          ssh user@your-server "docker pull your-docker-image-name && docker-compose up -d"
+    
+
+
 
 
 
